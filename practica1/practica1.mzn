@@ -6,6 +6,10 @@ int:N; %numero de trabajadores
 int:MaxDT; %numero de dias maximos seguidos que nadie puede trabajar
 int:MaxDL; %numero de dias maximos seguidos libres que nadie puede tener
 int:MinDT; %numero de dias minimos que cada trabajador debe tener
+int:A; %minimo de trabajadores afines que tiene que haber en un turno
+int:C; %numero de categorias
+array[1..N] of 1..C: categ; %categorias de trabajadores
+array[1..N,1..N] of 0..1:afin;%matriz simetrica con compañeros afines (1 afin, 0 no afin)
 
 %solucion en forma de matriz de DiasxNum trabajadores
 %  T| 1 2 3 4
@@ -20,6 +24,8 @@ array[1..D,1..N] of var 0..3:sol; % 0 = libra; 1 = turno 1; 2 = turno 2; 3 = tur
 %constraint asserts
 constraint assert (N >= (N1+N2+N3) ,"Tiene que haber suficientes trabajadores para rellenar las tareas");
 constraint assert(D >= MinDT, "No puede haber menos dias minimos trabajados que dias totales");
+constraint assert (A < N1 /\ A < N2 /\ A < N3, "No puede haber mas trabajadores afines que trabajadores por turno");
+constraint assert(C <= N1 /\ C <= N2 /\ C <= N3, "No puede haber mas categorias que trabajadores por turno, dado que tiene que haber un trabajador de cada categoria como minimo por turno");
 %relacion MaxDT y minDT
 constraint assert ((D - (D/MaxDT)) >= MinDT, "Los dias totales menos el numero de dias libres minimo que va a haber tiene que ser mayor o igual que el minimo de dias trabajados");
 
@@ -40,3 +46,9 @@ constraint forall (i in 1..N) ((sum (j in 1..D) (bool2int((sol[j,i] = 0)))) < (D
 %un trabajador no puede hacer el ultimo turno de un dia y el primero del siguiente dos veces seguidas en cuatro dias seguidos
 %constraint forall(i in 1..D-3) (forall (j in 1..N) (sol[i,j] = 3 /\ sol[i+1,j] != 1 /\ sol[i+2,j] = 3 /\ sol[i+3,j] != 1));
 constraint forall (j in 1..N) (forall (i in 1..D-3) (sum (k in 0..2) (sol[i+k, j] = 3 /\ sol[i+k+1, j] = 1) < 2));
+
+%cada trabajador de turno tiene que estar con al menos A trabajadores afines en ese turno
+constraint forall(i in 1..D) (forall (j in 1..3) ((forall (k in 1..N) (sol[i,k] = j /\ (sum(w in 1..N where sol[i,w] == j /\ w!=k)(afin[k,w])>= A)))));
+
+%en cada turno tiene que haber un trabajador de cada categoria
+constraint forall (i in 1..D) (forall (j in 1..N) (forall (k in 1..3) (forall (c in 1..C where categ[j]=c)((sum(bool2int(sol[i,j]=k)))>=1))));
