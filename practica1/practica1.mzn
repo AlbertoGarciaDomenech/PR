@@ -31,6 +31,9 @@ constraint assert (N >= (N1+N2+N3) ,"Tiene que haber suficientes trabajadores pa
 constraint assert(D >= MinDT, "No puede haber menos dias minimos trabajados que dias totales");
 constraint assert (A < N1 /\ A < N2 /\ A < N3, "No puede haber mas trabajadores afines que trabajadores por turno");
 constraint assert(C <= N1 /\ C <= N2 /\ C <= N3, "No puede haber mas categorias que trabajadores por turno, dado que tiene que haber un trabajador de cada categoria como minimo por turno");
+constraint assert(MaxDL > 0, "Los trabajadores no pueden librar 0 o menos dias seguidos");
+constraint assert(MaxDT > 0, "Los trabajadores no pueden trabajar 0 o menos dias seguidos");
+
 %relacion MaxDT y minDT
 constraint assert ((D - floor(D/MaxDT)) >= MinDT, "Los dias totales menos el numero de dias libres minimo que va a haber tiene que ser mayor o igual que el minimo de dias trabajados");
 %matriz de afines simetrica
