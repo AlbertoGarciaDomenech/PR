@@ -32,10 +32,9 @@ constraint assert(D >= MinDT, "No puede haber menos dias minimos trabajados que 
 constraint assert (A < N1 /\ A < N2 /\ A < N3, "No puede haber mas trabajadores afines que trabajadores por turno");
 constraint assert(C <= N1 /\ C <= N2 /\ C <= N3, "No puede haber mas categorias que trabajadores por turno, dado que tiene que haber un trabajador de cada categoria como minimo por turno");
 %relacion MaxDT y minDT
-constraint assert ((D - (D/MaxDT)) >= MinDT, "Los dias totales menos el numero de dias libres minimo que va a haber tiene que ser mayor o igual que el minimo de dias trabajados");
+%constraint assert ((D - (D/MaxDT)) >= MinDT, "Los dias totales menos el numero de dias libres minimo que va a haber tiene que ser mayor o igual que el minimo de dias trabajados");
 %matriz de afines simetrica
-constraint assert (forall(i in TRABAJADORES) (forall (j in TRABAJADORES) (afin[i, j] = afin[j, i])), "La matriz de afines no es simetrica");
-constraint assert (forall(i in TRABAJADORES) (afin [i, i] = 0), "Un trabajador no puede ser afin consigo mismo");
+constraint assert (forall(i in TRABAJADORES) (forall (j in 1..i) (afin[i, j] = 0)), "La matriz de afines no es valida");
 
 %cada turno tiene su numero de trabajadores
 constraint forall (i in DIAS) ((sum(j in TRABAJADORES) (bool2int(sol[i,j] = 1)))=N1);
@@ -55,7 +54,7 @@ constraint forall (i in TRABAJADORES) ((sum (j in DIAS) (bool2int((sol[j,i] = 0)
 constraint forall (j in TRABAJADORES) (forall (i in 1..D-3) (sum (k in 0..2) (bool2int(sol[i+k, j] = 3 /\ sol[i+k+1, j] = 1)) < 2));
 
 %cada trabajador de turno tiene que estar con al menos A trabajadores afines en ese turno
-constraint forall(i in DIAS) (forall (j in TURNOS) ((forall (k in TRABAJADORES) (sol[i,k] = j /\ (sum(w in 1..N where sol[i,w] == j /\ w!=k)(afin[k,w])>= A)))));
+%constraint forall(i in DIAS) (forall (j in TURNOS) ((forall (k in TRABAJADORES) (sol[i,k] = j /\ (sum(w in 1..N where sol[i,w] == j /\ w!=k)(afin[k,w])>= A)))));
 constraint forall(i in DIAS) ((forall (k in TRABAJADORES) (sum(w in TRABAJADORES where sol[i,w] == sol[i, k] /\ w!=k /\ sol[i, k] != 0)(afin[k,w])>= A)));
 
 %en cada turno tiene que haber un trabajador de cada categoria
