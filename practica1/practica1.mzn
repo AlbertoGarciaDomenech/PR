@@ -13,6 +13,7 @@ set of int: TRABAJADORES = 1..N;
 set of int: TURNOS = 1..3; %no incluye descanso
 set of int: CATEGORIAS = 1..C;
 array[TRABAJADORES] of CATEGORIAS: categ; %categorias de trabajadores
+array[DIAS] of int: numcateg;
 array[TRABAJADORES,TRABAJADORES] of 0..1:afin;%matriz simetrica con compañeros afines (1 afin, 0 no afin)
 array[TRABAJADORES,DIAS] of 0..1:diasPedidos; %matriz con los dias libre pedidos por los trabajadores(0 no pedido, 1 pedido)
 array[TRABAJADORES] of 0..3:prefTurnos; %array con las preferencias de los turnos que no quieren los trabajadores(0 no tiene preferencia)
@@ -70,7 +71,7 @@ constraint forall(i in DIAS) ((forall (k in TRABAJADORES) (sum(w in TRABAJADORES
 %constraint forall(i in DIAS) ((forall (k in 1..N-1) (sum(w in k+1..N where sol[i,w] == sol[i, k] /\ w!=k/\ sol[i, k] != 0)(afin[k,w])>= A)));
 
 %en cada turno tiene que haber un trabajador de cada categoria
-constraint forall (i in DIAS) (forall(k in TURNOS) (forall(c in CATEGORIAS)(sum(j in TRABAJADORES where categ[j] = c)(bool2int(sol[i,j]=k)) >=1)));
+constraint forall (i in DIAS) (forall(k in TURNOS) (forall(c in CATEGORIAS)(sum(j in TRABAJADORES where categ[j] = c)(bool2int(sol[i,j]=k)) >=numcateg[i])));
 
 %satisfaccion
 %solve satisfy;
@@ -78,11 +79,11 @@ constraint forall (i in DIAS) (forall(k in TURNOS) (forall(c in CATEGORIAS)(sum(
 %primera parte optimizacion
 %solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1))));
 %repartido entre los trabajadores
-%solve minimize (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1)) > 0)));
+solve minimize (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1)) > 0)));
 
 %segunda parte optimizacion
 %con array
-solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j] = prefTurnos[j] /\ prefTurnos[j] != 0))));
+%solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j] = prefTurnos[j] /\ prefTurnos[j] != 0))));
 %repartido entre los trabajadores
 %solve minimize (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i,j] = prefTurnos[j] /\ prefTurnos[j] != 0)) > 0)));
 %con matriz
