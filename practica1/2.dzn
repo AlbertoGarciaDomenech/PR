@@ -4,7 +4,7 @@ N1= 2;
 N2 = 1;
 N3 = 1;
 MaxDT = 3;
-MaxDL = 2;
+MaxDL = 3;
 MinDT = 2;
 A = 0;
 C = 1;
@@ -22,4 +22,4 @@ diasPedidos = [| 0, 1, 1, 1
                | 0, 0, 0, 0
                | 0, 0, 0, 0
                | 0, 0, 0, 0|];      
-prefTurnos = [0, 0, 0, 0, 0, 0];
+prefTurnos = [1, 0, 3, 2, 0, 0];

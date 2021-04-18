@@ -13,7 +13,7 @@ set of int: TRABAJADORES = 1..N;
 set of int: TURNOS = 1..3; %no incluye descanso
 set of int: CATEGORIAS = 1..C;
 array[TRABAJADORES] of CATEGORIAS: categ; %categorias de trabajadores
-array[DIAS] of int: numcateg;
+array[1..3] of int: numcateg;
 array[TRABAJADORES,TRABAJADORES] of 0..1:afin;%matriz simetrica con compañeros afines (1 afin, 0 no afin)
 array[TRABAJADORES,DIAS] of 0..1:diasPedidos; %matriz con los dias libre pedidos por los trabajadores(0 no pedido, 1 pedido)
 array[TRABAJADORES] of 0..3:prefTurnos; %array con las preferencias de los turnos que no quieren los trabajadores(0 no tiene preferencia)
@@ -49,29 +49,26 @@ constraint forall (i in DIAS) ((sum(j in TRABAJADORES) (bool2int(sol[i,j] = 2)))
 constraint forall (i in DIAS) ((sum(j in TRABAJADORES) (bool2int(sol[i,j] = 3)))=N3);
 
 %ningun trabajador puede trabajar MaxDT o mas dias consecutivos
-constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDT)) ((sum (k in 0..(MaxDT-1)) (bool2int(sol[j+k,i] = 0))) >= 1)));
+constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDT+1)) ((sum (k in 0..(MaxDT-1)) (bool2int(sol[j+k,i] = 0))) >= 1)));
 %ningun trabajador puede librar MaxDL o mas dias libres seguidos
 constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDL+1)) ((sum (k in 0..(MaxDL-1)) (bool2int(sol[j+k,i] != 0))) >= 1)));
 %si añadimos que los  trabajadores puedan pedir dias y que no cuenten en la restriccion de dias libres consecutivos:
-%constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDL)) ((sum (k in 0..(MaxDL-1)) (bool2int(sol[j+k,i] != 0 \/ diasPedidos[i,j+k]=1))) >= 1)));
+constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDL)) ((sum (k in 0..(MaxDL-1)) (bool2int(sol[j+k,i] != 0 \/ diasPedidos[i,j+k]=1))) >= 1)));
 %todos deben tener MinDT trabajados
 constraint forall (i in TRABAJADORES) ((sum (j in DIAS) (bool2int((sol[j,i] != 0)))) >= MinDT);
 %si añadimos que los trabajadores puedan pedir dias y que se descuenten de MinDT:
-%constraint forall (i in TRABAJADORES) ((sum (j in DIAS) (bool2int((sol[j,i] != 0)))) >= (MinDT - (sum (j in DIAS) (diasPedidos[i,j]))));
+constraint forall (i in TRABAJADORES) ((sum (j in DIAS) (bool2int((sol[j,i] != 0)))) >= (MinDT - (sum (j in DIAS) (diasPedidos[i,j]))));
 
-%un trabajador no puede hacer el ultimo turno de un dia y el primero del siguiente dos veces seguidas en cuatro dias seguidos
-%constraint forall(i in 1..D-3) (forall (j in 1..N) (sol[i,j] = 3 /\ sol[i+1,j] != 1 /\ sol[i+2,j] = 3 /\ sol[i+3,j] != 1));
 %en cada intervalo de 4 dias, la suma de veces que se trasnocha es menor que 2
 constraint forall (j in TRABAJADORES) (forall (i in 1..D-3) (sum (k in 0..2) (bool2int(sol[i+k, j] = 3 /\ sol[i+k+1, j] = 1)) < 2));
 
 %cada trabajador de turno tiene que estar con al menos A trabajadores afines en ese turno
-%constraint forall(i in DIAS) (forall (j in TURNOS) ((forall (k in TRABAJADORES) (sol[i,k] = j /\ (sum(w in 1..N where sol[i,w] == j /\ w!=k)(afin[k,w])>= A)))));
-constraint forall(i in DIAS) ((forall (k in TRABAJADORES) (sum(w in TRABAJADORES where sol[i,w] == sol[i, k] /\ w!=k /\ sol[i, k] != 0)(afin[k,w])>= A)));
+constraint forall(i in DIAS) ((forall (k in TRABAJADORES) (sum(w in TRABAJADORES where sol[i,w] == sol[i, k])(afin[k,w])>= A \/ sol[i, k] = 0)));
 
-%constraint forall(i in DIAS) ((forall (k in 1..N-1) (sum(w in k+1..N where sol[i,w] == sol[i, k] /\ w!=k/\ sol[i, k] != 0)(afin[k,w])>= A)));
+
 
 %en cada turno tiene que haber un trabajador de cada categoria
-constraint forall (i in DIAS) (forall(k in TURNOS) (forall(c in CATEGORIAS)(sum(j in TRABAJADORES where categ[j] = c)(bool2int(sol[i,j]=k)) >=numcateg[i])));
+constraint forall (i in DIAS) (forall(k in TURNOS) (forall(c in CATEGORIAS)(sum(j in TRABAJADORES where categ[j] = c)(bool2int(sol[i,j]=k)) >=numcateg[k])));
 
 %satisfaccion
 %solve satisfy;
@@ -79,16 +76,16 @@ constraint forall (i in DIAS) (forall(k in TURNOS) (forall(c in CATEGORIAS)(sum(
 %primera parte optimizacion
 %solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1))));
 %repartido entre los trabajadores
-solve minimize (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1)) > 0)));
+%solve maximize trabj(sol,diasPedidos);
 
 %segunda parte optimizacion
 %con array
-%solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j] = prefTurnos[j] /\ prefTurnos[j] != 0))));
+solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j] = prefTurnos[j] /\ prefTurnos[j] != 0))));
 %repartido entre los trabajadores
-%solve minimize (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i,j] = prefTurnos[j] /\ prefTurnos[j] != 0)) > 0)));
+%solve maximize (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i,j] = prefTurnos[j] /\ prefTurnos[j] != 0)) > 1)));
 %con matriz
 %solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j] = prefDiasTurnos[j,i] /\ prefDiasTurnos[j,i] != 0))));
 
-function var int: trabj(array[int,int] of var int: sol, array[int,int] of 0..1: diasPedidos) = (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1)) > 0)));  
+function var int: trabj(array[int,int] of var int: sol, array[int,int] of 0..1: diasPedidos) = (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1)) > 1)));  
 
 output ["Turnos de los trabajadores por dias: \n"] ++ ["TRABJ "] ++ ["\(i) "| i in TRABAJADORES] ++ ["\n"] ++ [(if j == 1 then "DIA \(i):" else "" endif) ++ "\(sol[i,j]) " ++ (if j == N then "\n" else "" endif)|i in DIAS, j in TRABAJADORES] ++ ["\nTrabajadores puteados: "]++ ["\(trabj(sol,diasPedidos))"];
