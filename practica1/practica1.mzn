@@ -88,4 +88,4 @@ solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j] = pre
 
 function var int: trabj(array[int,int] of var int: sol, array[int,int] of 0..1: diasPedidos) = (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1)) > 1)));  
 
-output ["Turnos de los trabajadores por dias: \n"] ++ ["TRABJ "] ++ ["\(i) "| i in TRABAJADORES] ++ ["\n"] ++ [(if j == 1 then "DIA \(i):" else "" endif) ++ "\(sol[i,j]) " ++ (if j == N then "\n" else "" endif)|i in DIAS, j in TRABAJADORES] ++ ["\nTrabajadores puteados: "]++ ["\(trabj(sol,diasPedidos))"];
+output ["Turnos de los trabajadores por dias: \n"] ++ ["TRABJ "] ++ ["|\(i) "| i in TRABAJADORES] ++ ["\n"] ++ [(if j == 1 then "DIA \(i):" else "" endif) ++ "|\(sol[i,j]) " ++ (if j == N then "\n" else "" endif)|i in DIAS, j in TRABAJADORES] ++ ["\nTrabajadores puteados: "]++ ["\(trabj(sol,diasPedidos))"];
