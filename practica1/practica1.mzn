@@ -15,7 +15,8 @@ set of int: CATEGORIAS = 1..C;
 array[TRABAJADORES] of CATEGORIAS: categ; %categorias de trabajadores
 array[TRABAJADORES,TRABAJADORES] of 0..1:afin;%matriz simetrica con compañeros afines (1 afin, 0 no afin)
 array[TRABAJADORES,DIAS] of 0..1:diasPedidos; %matriz con los dias libre pedidos por los trabajadores(0 no pedido, 1 pedido)
-
+array[TRABAJADORES] of 0..3:prefTurnos; %array con las preferencias de los turnos que no quieren los trabajadores(0 no tiene preferencia)
+array[TRABAJADORES,DIAS] of 0..3:prefDiasTurnos; %matriz con las preferencias por dias de los turnos que no quieren los trabajadores
 %solucion en forma de matriz de DiasxNum trabajadores
 %  T| 1 2 3 4
 %D
@@ -69,4 +70,11 @@ constraint forall(i in DIAS) ((forall (k in TRABAJADORES) (sum(w in TRABAJADORES
 %en cada turno tiene que haber un trabajador de cada categoria
 constraint forall (i in DIAS) (forall(k in TURNOS) (forall(c in CATEGORIAS)(sum(j in TRABAJADORES where categ[j] = c)(bool2int(sol[i,j]=k)) >=1)));
 
-solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1))));
+
+%primera parte optimizacion
+%solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1))));
+%segunda parte optimizacion
+%con array
+%solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j] = prefTurnos[j]))));
+%con matriz
+solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j] = prefDiasTurnos[j,i]))));
