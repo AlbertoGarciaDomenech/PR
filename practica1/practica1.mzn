@@ -51,7 +51,7 @@ constraint forall (i in DIAS) ((sum(j in TRABAJADORES) (bool2int(sol[i,j] = 3)))
 %ningun trabajador puede trabajar MaxDT o mas dias consecutivos
 constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDT)) ((sum (k in 0..(MaxDT-1)) (bool2int(sol[j+k,i] = 0))) >= 1)));
 %ningun trabajador puede librar MaxDL o mas dias libres seguidos
-constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDL)) ((sum (k in 0..(MaxDL-1)) (bool2int(sol[j+k,i] != 0))) >= 1)));
+constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDL+1)) ((sum (k in 0..(MaxDL-1)) (bool2int(sol[j+k,i] != 0))) >= 1)));
 %si añadimos que los  trabajadores puedan pedir dias y que no cuenten en la restriccion de dias libres consecutivos:
 %constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDL)) ((sum (k in 0..(MaxDL-1)) (bool2int(sol[j+k,i] != 0 \/ diasPedidos[i,j+k]=1))) >= 1)));
 %todos deben tener MinDT trabajados
@@ -89,5 +89,6 @@ solve minimize (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i
 %con matriz
 %solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j] = prefDiasTurnos[j,i] /\ prefDiasTurnos[j,i] != 0))));
 
+function var int: trabj(array[int,int] of var int: sol, array[int,int] of 0..1: diasPedidos) = (sum(j in TRABAJADORES) (bool2int(sum (i in DIAS) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1)) > 0)));  
 
-output ["Turnos de los trabajadores por dias: \n"] ++ ["TRABJ "] ++ ["\(i) "| i in TRABAJADORES] ++ ["\n"] ++ [(if j == 1 then "DIA \(i):" else "" endif) ++ "\(sol[i,j]) " ++ (if j == N then "\n" else "" endif)|i in DIAS, j in TRABAJADORES];
+output ["Turnos de los trabajadores por dias: \n"] ++ ["TRABJ "] ++ ["\(i) "| i in TRABAJADORES] ++ ["\n"] ++ [(if j == 1 then "DIA \(i):" else "" endif) ++ "\(sol[i,j]) " ++ (if j == N then "\n" else "" endif)|i in DIAS, j in TRABAJADORES] ++ ["\nTrabajadores puteados: "]++ ["\(trabj(sol,diasPedidos))"];
