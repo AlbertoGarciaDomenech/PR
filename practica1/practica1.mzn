@@ -14,7 +14,7 @@ set of int: TURNOS = 1..3; %no incluye descanso
 set of int: CATEGORIAS = 1..C;
 array[TRABAJADORES] of CATEGORIAS: categ; %categorias de trabajadores
 array[TRABAJADORES,TRABAJADORES] of 0..1:afin;%matriz simetrica con compañeros afines (1 afin, 0 no afin)
-
+array[TRABAJADORES,DIAS] of 0..1:diasPedidos; %matriz con los dias libre pedidos por los trabajadores(0 no pedido, 1 pedido)
 
 %solucion en forma de matriz de DiasxNum trabajadores
 %  T| 1 2 3 4
@@ -48,8 +48,12 @@ constraint forall (i in DIAS) ((sum(j in TRABAJADORES) (bool2int(sol[i,j] = 3)))
 constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDT)) ((sum (k in 0..(MaxDT-1)) (bool2int(sol[j+k,i] = 0))) >= 1)));
 %ningun trabajador puede librar MaxDL o mas dias libres seguidos
 constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDL)) ((sum (k in 0..(MaxDL-1)) (bool2int(sol[j+k,i] != 0))) >= 1)));
+%si añadimos que los  trabajadores puedan pedir dias y que no cuenten en la restriccion de dias libres consecutivos:
+constraint forall (i in TRABAJADORES) ((forall (j in 1..(D-MaxDL)) ((sum (k in 0..(MaxDL-1)) (bool2int(sol[j+k,i] != 0 \/ diasPedidos[i,j+k]=1))) >= 1)));
 %todos deben tener MinDT trabajados
 constraint forall (i in TRABAJADORES) ((sum (j in DIAS) (bool2int((sol[j,i] != 0)))) >= MinDT);
+%si añadimos que los trabajadores puedan pedir dias y que se descuenten de MinDT:
+constraint forall (i in TRABAJADORES) ((sum (j in DIAS) (bool2int((sol[j,i] != 0)))) >= (MinDT - (sum (j in DIAS) (diasPedidos[i,j]))));
 
 %un trabajador no puede hacer el ultimo turno de un dia y el primero del siguiente dos veces seguidas en cuatro dias seguidos
 %constraint forall(i in 1..D-3) (forall (j in 1..N) (sol[i,j] = 3 /\ sol[i+1,j] != 1 /\ sol[i+2,j] = 3 /\ sol[i+3,j] != 1));
@@ -64,3 +68,5 @@ constraint forall(i in DIAS) ((forall (k in TRABAJADORES) (sum(w in TRABAJADORES
 
 %en cada turno tiene que haber un trabajador de cada categoria
 constraint forall (i in DIAS) (forall(k in TURNOS) (forall(c in CATEGORIAS)(sum(j in TRABAJADORES where categ[j] = c)(bool2int(sol[i,j]=k)) >=1)));
+
+solve minimize (sum (i in DIAS) (sum(j in TRABAJADORES) (bool2int(sol[i,j]!=0 /\ diasPedidos[j,i]=1))));
