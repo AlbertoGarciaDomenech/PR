@@ -52,6 +52,8 @@ constraint forall (mes in 2..6) (forall (aceite in AceitesNoVeg) (almacNoVeg[mes
 constraint forall (aceite in AceitesVeg) (almacVeg[6,aceite] = cantidadVeg[aceite]); 
 constraint forall (aceite in AceitesNoVeg) (almacNoVeg[6,aceite] = cantidadNoVeg[aceite]);
 
+%tenemos que tener un minimo de beneficio
+constraint benef()>MinB;
 
 %FUNCIONES
 
@@ -71,5 +73,5 @@ function var int:gastosAlmacenamiento(int:mes)=sum(aceite in AceitesVeg) (almacV
 function var int:benef() = ((sum (mes in 1..6)(sum (aceite in AceitesVeg) (refinVeg[mes,aceite])) + sum (mes in 1..6)(sum (aceiteN in AceitesNoVeg) (refinNoVeg[mes,aceiteN]))) * VALOR) - (sum (mes in 1..6) (gastos(mes)));
 
 
-solve maximize benef(); 
+%solve maximize benef(); 
 %output ["Beneficio total = "] ++ ["\(benef())"]; 
