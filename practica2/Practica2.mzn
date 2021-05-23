@@ -11,7 +11,7 @@ int:MinB;                                                     %minimo beneficio
 
 enum AceitesVeg = {VEG1, VEG2};                               %tipos de aceites vegetales
 enum AceitesNoVeg = {ANV1, ANV2, ANV3};                       %tipo de aceites no vegetales
-
+enum meses = {ENERO,FEBRERO,MARZO,ABRIL,MAYO,JUNIO};
 array[1..6,AceitesVeg] of int: preciosVeg;                   %precio de compra de los aceites vegetales por mes
 array[1..6,AceitesNoVeg] of int: preciosNoVeg;               %precio de compra de los aceites no vegetales por mes
     
@@ -53,7 +53,7 @@ constraint forall (aceite in AceitesVeg) (almacVeg[6,aceite] = cantidadVeg[aceit
 constraint forall (aceite in AceitesNoVeg) (almacNoVeg[6,aceite] = cantidadNoVeg[aceite]);
 
 %tenemos que tener un minimo de beneficio
-constraint benef()>MinB;
+%constraint benef()>MinB;
 
 %FUNCIONES
 
@@ -74,4 +74,16 @@ function var int:benef() = ((sum (mes in 1..6)(sum (aceite in AceitesVeg) (refin
 
 
 %solve maximize benef(); 
+solve maximize (sum (i in 1..6) (((sum (j in AceitesVeg) (refinVeg[i, j]*VALOR - (compVeg[i, j]*preciosVeg[i, j] + almacVeg[i, j]*CA))) + sum (j in AceitesNoVeg) (refinNoVeg[i, j]*VALOR - (compNoVeg[i, j]*preciosNoVeg[i, j] + almacNoVeg[i, j]*CA)))));
+
 %output ["Beneficio total = "] ++ ["\(benef())"]; 
+%output ["\t COMPRAS||REFINADOS||ALMACENAMIENTO\n"];
+%output ["ACEITES VEGETALES:\n"] ++ [if (j == 1) then "\(i)[" else "" endif ++ " \(compVeg[i, j]) || \(refinVeg[i,j]) || \(almacVeg[i,j])" ++ if (j==2) then "\n" else "" endif| i in meses, j in AceitesVeg] ++ ["]\n"];
+%output ["ACEITES NO VEGETALES:\n"] ++ [if (j == 1) then "\(i)" else "" endif ++ " \(compNoVeg[i, j]) || \(refinNoVeg[i,j]) || \(almacNoVeg[i,j])" ++ if (j==3) then "\n" else "" endif| i in meses, j in AceitesNoVeg] ++ ["\n"];
+output ["COMPRAS VEG:\n"] ++ [if (j == 1) then "\(i)" else "" endif ++ " \(compVeg[i, j])" ++ if (j==2) then "\n" else "" endif| i in meses, j in AceitesVeg] ++ ["\n"];
+output ["COMPRAS NO VEG:\n"]  ++ [if (j == 1) then "\(i)" else ""endif ++ " \(compNoVeg[i, j])" ++ if (j==3) then "\n" else ""endif| i in meses, j in AceitesNoVeg] ++ ["\n"];
+output ["REFINADOS VEG:\n"] ++ [if (j == 1) then "\(i)" else "" endif ++ " \(refinVeg[i, j])" ++ if (j==2) then "\n" else "" endif| i in meses, j in AceitesVeg] ++ ["\n"];
+output ["REFINADOS NO VEG:\n"]  ++ [if (j == 1) then "\(i)" else ""endif ++ " \(refinNoVeg[i, j])" ++ if (j==3) then "\n" else ""endif| i in meses, j in AceitesNoVeg] ++ ["\n"];
+output ["ALMACENAMIENTO VEG:\n"] ++ [if (j == 1) then "\(i)" else "" endif ++ " \(almacVeg[i, j])" ++ if (j==2) then "\n" else "" endif| i in meses, j in AceitesVeg] ++ ["\n"];
+output ["ALMACENAMIENTO NO VEG:\n"]  ++ [if (j == 1) then "\(i)" else ""endif ++ " \(almacNoVeg[i, j])" ++ if (j==3) then "\n" else ""endif| i in meses, j in AceitesNoVeg] ++ ["\n"];
+output ["Beneficio: \n"] ++ ["\(sum (i in 1..6) (((sum (j in AceitesVeg) (refinVeg[i, j]*VALOR - (compVeg[i, j]*preciosVeg[i, j] + almacVeg[i, j]*CA))) + sum (j in AceitesNoVeg) (refinNoVeg[i, j]*VALOR - (compNoVeg[i, j]*preciosNoVeg[i, j] + almacNoVeg[i, j]*CA)))))"];
