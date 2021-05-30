@@ -92,6 +92,18 @@ constraint forall (i in meses) ((forall (j in AceitesVeg) (refinVeg[i,j] = 0 \/ 
 %si se VEG1 o VEG2 entonces se tiene que usar ese mismo mes ANV3
 constraint forall(i in meses) ((refinVeg[i,VEG1]>0 \/ refinVeg[i,VEG1]>0)->refinNoVeg[i,ANV3]>0);
 
+%EXTENSIONES POSIBLES
+%el valor del producto final depende del valor de los aceites que lo conforman(puede ir variando dependiendo del mes)
+array [1..6, AceitesVeg] of int:ValorVEG;
+array [1..6, AceitesNoVeg] of int:ValorNoVEG;
+%el beneficio se calcularia asi:
+function var int:benef2() = sum (mes in meses) ((sum (aceite in AceitesVeg) (refinVeg[mes,aceite]*ValorVEG[mes,aceite]))+(sum (aceite in AceitesNoVeg) (refinNoVeg[mes,aceite]*ValorNoVEG[mes,aceite])) -(gastos(mes)));
+%si usamos un aceite X no podemos usar un aceite Y porque no se mezclan bien (por ejemplo el VEG2 y el ANV2)
+constraint forall(i in meses) ((refinVeg[i,VEG2]>0->refinNoVeg[i,ANV2]=0) \/ (refinNoVeg[i,ANV2]>0->refinVeg[i,VEG2]=0));
+%si un mes refinamos mas de una cantidad Z de toneladas el siguiente mes no podremos refinar ese tipo de aceite
+int:Z;
+constraint forall (i in 1..5) ((forall (j in AceitesVeg) (refinVeg[i,j]>Z->refinVeg[i+1,j]=0)) /\ (forall (j in AceitesNoVeg) (refinNoVeg[i,j]>Z->refinNoVeg[i+1,j]=0)));
+
 solve maximize benef();
 
 output ["COMPRAS VEG:\n"] ++ [if (j == 1) then "\(i)" else "" endif ++ " \(compVeg[i, j])" ++ if (j==2) then "\n" else "" endif| i in meses, j in AceitesVeg] ++ ["\n"];
