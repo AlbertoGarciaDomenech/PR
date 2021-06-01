@@ -30,9 +30,6 @@ array[1..6,AceitesNoVeg] of var 0..MCAP: almacNoVeg;           %cantidad almacen
 array[1..6, AceitesVeg] of var 0..MCAP+MAXV:compVeg;           %compras de aceite vegetal por mes,cota maxima de almacenamiento + refinado(no se almacena)
 array[1..6, AceitesNoVeg] of var 0..MCAP+MAXN:compNoVeg;       %compras de aceite no vegetal por mes
 
-%DECLARACIONES PARA EXTENSIONES
-int:K;
-int:T;
 
 %RESTRICCIONES
 
@@ -85,24 +82,28 @@ function var int:benef()= sum (mes in meses) ((sum (aceite in AceitesVeg) (refin
 
 %EXTENSIONES
 
+%DECLARACIONES PARA EXTENSIONES
+%int:K;
+%int:T;
+
 %no hacer el producto final con mas de K aceites
-constraint forall (i in meses) ((sum(aceite in AceitesVeg) (bool2int(refinVeg[i,aceite]>0)) + sum(aceite in AceitesNoVeg) (bool2int(refinNoVeg[i,aceite]>0)))<=K);
+%constraint forall (i in meses) ((sum(aceite in AceitesVeg) (bool2int(refinVeg[i,aceite]>0)) + sum(aceite in AceitesNoVeg) (bool2int(refinNoVeg[i,aceite]>0)))<=K);
 %si usamos un aceite un mes para hacer el producto final tenemos que usar como minimo T toneladas
-constraint forall (i in meses) ((forall (j in AceitesVeg) (refinVeg[i,j] = 0 \/ refinVeg[i,j] > T)) /\ (forall (k in AceitesNoVeg) (refinNoVeg[i,k]=0\/refinNoVeg[i,k]>T)));
+%constraint forall (i in meses) ((forall (j in AceitesVeg) (refinVeg[i,j] = 0 \/ refinVeg[i,j] > T)) /\ (forall (k in AceitesNoVeg) (refinNoVeg[i,k]=0\/refinNoVeg[i,k]>T)));
 %si se VEG1 o VEG2 entonces se tiene que usar ese mismo mes ANV3
-constraint forall(i in meses) ((refinVeg[i,VEG1]>0 \/ refinVeg[i,VEG1]>0)->refinNoVeg[i,ANV3]>0);
+%constraint forall(i in meses) ((refinVeg[i,VEG1]>0 \/ refinVeg[i,VEG1]>0)->refinNoVeg[i,ANV3]>0);
 
 %EXTENSIONES POSIBLES
 %el valor del producto final depende del valor de los aceites que lo conforman(puede ir variando dependiendo del mes)
-array [1..6, AceitesVeg] of int:ValorVEG;
-array [1..6, AceitesNoVeg] of int:ValorNoVEG;
+%array [1..6, AceitesVeg] of int:ValorVEG;
+%array [1..6, AceitesNoVeg] of int:ValorNoVEG;
 %el beneficio se calcularia asi:
-function var int:benef2() = sum (mes in meses) ((sum (aceite in AceitesVeg) (refinVeg[mes,aceite]*ValorVEG[mes,aceite]))+(sum (aceite in AceitesNoVeg) (refinNoVeg[mes,aceite]*ValorNoVEG[mes,aceite])) -(gastos(mes)));
+%function var int:benef2() = sum (mes in meses) ((sum (aceite in AceitesVeg) (refinVeg[mes,aceite]*ValorVEG[mes,aceite]))+(sum (aceite in AceitesNoVeg) (refinNoVeg[mes,aceite]*ValorNoVEG[mes,aceite])) -(gastos(mes)));
 %si usamos un aceite X no podemos usar un aceite Y porque no se mezclan bien (por ejemplo el VEG2 y el ANV2)
-constraint forall(i in meses) ((refinVeg[i,VEG2]>0->refinNoVeg[i,ANV2]=0) \/ (refinNoVeg[i,ANV2]>0->refinVeg[i,VEG2]=0));
+%constraint forall(i in meses) ((refinVeg[i,VEG2]>0->refinNoVeg[i,ANV2]=0) \/ (refinNoVeg[i,ANV2]>0->refinVeg[i,VEG2]=0));
 %si un mes refinamos mas de una cantidad Z de toneladas el siguiente mes no podremos refinar ese tipo de aceite
-int:Z;
-constraint forall (i in 1..5) ((forall (j in AceitesVeg) (refinVeg[i,j]>Z->refinVeg[i+1,j]=0)) /\ (forall (j in AceitesNoVeg) (refinNoVeg[i,j]>Z->refinNoVeg[i+1,j]=0)));
+%int:Z;
+%constraint forall (i in 1..5) ((forall (j in AceitesVeg) (refinVeg[i,j]>Z->refinVeg[i+1,j]=0)) /\ (forall (j in AceitesNoVeg) (refinNoVeg[i,j]>Z->refinNoVeg[i+1,j]=0)));
 
 solve maximize benef();
 
