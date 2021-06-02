@@ -15,4 +15,5 @@ durezaNoVeg = [2.0,4.2,5.0];
 
 cantidadVeg = [500,500];
 cantidadNoVeg = [500,500,500];
-K = 3;
+%K = 3;
+%T = 200;

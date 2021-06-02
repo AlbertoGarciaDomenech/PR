@@ -31,6 +31,14 @@ array[1..6, AceitesVeg] of var 0..MCAP+MAXV:compVeg;           %compras de aceit
 array[1..6, AceitesNoVeg] of var 0..MCAP+MAXN:compNoVeg;       %compras de aceite no vegetal por mes
 
 
+%ASSERTS
+constraint assert ( VALOR > 0,"El valor del aceite tiene que ser positivo");
+constraint assert ( MAXV > 0,"El maximo de aceite vegetal refinado tiene que ser positivo");
+constraint assert ( MAXN > 0,"El maximo de aceite no vegetal refinado tiene que ser positivo");
+constraint assert ( MCAP > 0, "La capacidad de almacenamiento maxima tiene que ser mayor que 0");
+constraint assert(MinD < MaxD, "La dureza minima tiene que ser menor que la dureza maxima");
+constraint assert((forall (i in AceitesVeg) (cantidadVeg[i] <= MCAP)) /\ (forall (i in AceitesNoVeg) (cantidadNoVeg[i] <= MCAP)), "La cantidad final de cada aceite no puede superar el limite de almacenamiento");
+
 %RESTRICCIONES
 
 %refinar maximo MAXV de aceites vegetales
