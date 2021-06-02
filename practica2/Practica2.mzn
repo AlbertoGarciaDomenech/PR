@@ -63,6 +63,7 @@ constraint forall (mes in FEBRERO..JUNIO) (forall (aceite in AceitesNoVeg) (alma
 constraint forall (aceite in AceitesVeg) (almacVeg[JUNIO,aceite]+compVeg[JUNIO,aceite]-refinVeg[JUNIO,aceite] = cantidadVeg[aceite]); 
 constraint forall (aceite in AceitesNoVeg) (almacNoVeg[JUNIO,aceite]+compNoVeg[JUNIO,aceite]-refinNoVeg[JUNIO,aceite] = cantidadNoVeg[aceite]);
 
+%el almacenamiento no puede superar el limite de almacenamiento en ningun momento
 constraint forall (mes in meses, aceite in AceitesVeg) (almacVeg[mes,aceite] <= MCAP);
 constraint forall (mes in meses, aceite in AceitesNoVeg) (almacNoVeg[mes,aceite] <= MCAP);
 
