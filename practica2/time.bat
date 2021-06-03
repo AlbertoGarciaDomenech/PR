@@ -1,4 +1,4 @@
 echo %time%
-z3 out.smt2 > resultados.txt
+z3 out.smt2
 echo %time%
 PAUSE
