@@ -77,7 +77,7 @@ constraint benef()>MinB;
 
 %FUNCIONES
 
-%funcion que calcula la suma ponderada (aceiteRefinado(i)*durezaAceite(i) / totalAceite) de un mes
+%funcion que calcula la suma ponderada aceiteRefinado(i)*durezaAceite(i)  de un mes
 function var float:sumaPonderada(int:mes) = sum (veg in AceitesVeg) (refinVeg[mes,veg] * durezaVeg[veg]) + sum (noveg in AceitesNoVeg) (refinNoVeg[mes,noveg] * durezaNoVeg[noveg]); 
 %funcion que calcula el total de producto vendido en un mes
 function var int: refinMes(int:mes) = sum (aceite in AceitesVeg) (refinVeg[mes,aceite]) + sum (aceiteN in AceitesNoVeg) (refinNoVeg[mes,aceiteN]);
@@ -89,9 +89,7 @@ function var int:gastos(int:mes) = gastosCompras(mes) + gastosAlmacenamiento(mes
 function var int:gastosCompras(int:mes)= (sum (aceite in AceitesVeg) (compVeg[mes,aceite]*preciosVeg[mes,aceite]) + sum (aceite in AceitesNoVeg) (compNoVeg[mes,aceite]*preciosNoVeg[mes,aceite]));
 %funcion que calcula gastos en almacenamiento en un mes determinado
 function var int:gastosAlmacenamiento(int:mes)=(sum(aceite in AceitesVeg) (almacVeg[mes,aceite]) + sum(aceite in AceitesNoVeg) (almacNoVeg[mes,aceite])) * CA;
-%funcion que calcula el beneficio final (sumatorio de los aceites que hemos refinado cada mes * valor del producto refinado)
-%function var int:benef() = ((sum (mes in meses)(sum (aceite in AceitesVeg) (refinVeg[mes,aceite])) + sum (mes in meses)(sum (aceiteN in AceitesNoVeg) (refinNoVeg[mes,aceiteN]))) * VALOR) - (sum (mes in meses) (gastos(mes)));
-function var int:benef()= sum (mes in meses) ((sum (aceite in AceitesVeg) (refinVeg[mes,aceite]*VALOR))+(sum (aceite in AceitesNoVeg) (refinNoVeg[mes,aceite]*VALOR)) -(gastos(mes)));
+function var int:benef()= sum (mes in meses) (refinMes(mes)*VALOR-(gastos(mes)));
 
 
 %EXTENSIONES
@@ -129,6 +127,3 @@ output ["ALMACENAMIENTO VEG:\n"] ++ [if (j == 1) then "\(i)" else "" endif ++ " 
 output ["ALMACENAMIENTO NO VEG:\n"]  ++ [if (j == 1) then "\(i)" else ""endif ++ " \(almacNoVeg[i, j])" ++ if (j==3) then "\n" else ""endif| i in meses, j in AceitesNoVeg] ++ ["\n"];
 output ["ALMACENAMIENTO FINAL\n VEG: "] ++ ["\(almacVeg[JUNIO,aceite]+compVeg[JUNIO,aceite]-refinVeg[JUNIO,aceite]) " | aceite in AceitesVeg] ++ ["\n NO VEG: "] ++ ["\(almacNoVeg[JUNIO,aceite]+compNoVeg[JUNIO,aceite]-refinNoVeg[JUNIO,aceite]) "| aceite in AceitesNoVeg];
 output ["\nBeneficio total: \n"] ++ ["\(sum (i in meses) (((sum (j in AceitesVeg) (refinVeg[i, j]*VALOR - (compVeg[i, j]*preciosVeg[i, j] + almacVeg[i, j]*CA))) + sum (j in AceitesNoVeg) (refinNoVeg[i, j]*VALOR - (compNoVeg[i, j]*preciosNoVeg[i, j] + almacNoVeg[i, j]*CA)))))"];
-%output ["\nBeneficio por mes: \n"] ++[ "\(i):" ++ " \(((sum (j in AceitesVeg) (refinVeg[i, j]*VALOR - (compVeg[i, j]*preciosVeg[i, j] + almacVeg[i, j]*CA))) + sum (j in AceitesNoVeg) (refinNoVeg[i, j]*VALOR - (compNoVeg[i, j]*preciosNoVeg[i, j] + almacNoVeg[i, j]*CA)))) " |i in meses] ++ ["= \(sum (i in meses) (((sum (j in AceitesVeg) (refinVeg[i, j]*VALOR - (compVeg[i, j]*preciosVeg[i, j] + almacVeg[i, j]*CA))) + sum (j in AceitesNoVeg) (refinNoVeg[i, j]*VALOR - (compNoVeg[i, j]*preciosNoVeg[i, j] + almacNoVeg[i, j]*CA)))))"];
-
-%output ["\nDureza media por mes "] ++ ["\((sum (veg in AceitesVeg) (refinVeg[j,veg] * durezaVeg[veg]) + sum (noveg in AceitesNoVeg) (refinNoVeg[j,noveg] * durezaNoVeg[noveg]))/(sum (aceite in AceitesVeg) (refinVeg[j,aceite]) + sum (aceiteN in AceitesNoVeg) (refinNoVeg[j,aceiteN]))) " | j in meses]
