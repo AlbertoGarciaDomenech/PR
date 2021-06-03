@@ -32,7 +32,7 @@ array[1..6, AceitesNoVeg] of var 0..MCAP+MAXN:compNoVeg;       %compras de aceit
 
 
 %ASSERTS
-constraint assert ( VALOR > 0,"El valor del aceite tiene que ser positivo");
+constraint assert ( VALOR > 0,"El valor del producto final tiene que ser positivo");
 constraint assert ( MAXV > 0,"El maximo de aceite vegetal refinado tiene que ser positivo");
 constraint assert ( MAXN > 0,"El maximo de aceite no vegetal refinado tiene que ser positivo");
 constraint assert ( MCAP > 0, "La capacidad de almacenamiento maxima tiene que ser mayor que 0");
@@ -126,4 +126,4 @@ output ["ALMACENAMIENTO FINAL\n VEG: "] ++ ["\(almacVeg[JUNIO,aceite]+compVeg[JU
 output ["\nBeneficio total: \n"] ++ ["\(sum (i in meses) (((sum (j in AceitesVeg) (refinVeg[i, j]*VALOR - (compVeg[i, j]*preciosVeg[i, j] + almacVeg[i, j]*CA))) + sum (j in AceitesNoVeg) (refinNoVeg[i, j]*VALOR - (compNoVeg[i, j]*preciosNoVeg[i, j] + almacNoVeg[i, j]*CA)))))"];
 %output ["\nBeneficio por mes: \n"] ++[ "\(i):" ++ " \(((sum (j in AceitesVeg) (refinVeg[i, j]*VALOR - (compVeg[i, j]*preciosVeg[i, j] + almacVeg[i, j]*CA))) + sum (j in AceitesNoVeg) (refinNoVeg[i, j]*VALOR - (compNoVeg[i, j]*preciosNoVeg[i, j] + almacNoVeg[i, j]*CA)))) " |i in meses] ++ ["= \(sum (i in meses) (((sum (j in AceitesVeg) (refinVeg[i, j]*VALOR - (compVeg[i, j]*preciosVeg[i, j] + almacVeg[i, j]*CA))) + sum (j in AceitesNoVeg) (refinNoVeg[i, j]*VALOR - (compNoVeg[i, j]*preciosNoVeg[i, j] + almacNoVeg[i, j]*CA)))))"];
 
-
+output ["\nDureza media por mes "] ++ ["\((sum (veg in AceitesVeg) (refinVeg[j,veg] * durezaVeg[veg]) + sum (noveg in AceitesNoVeg) (refinNoVeg[j,noveg] * durezaNoVeg[noveg]))/(sum (aceite in AceitesVeg) (refinVeg[j,aceite]) + sum (aceiteN in AceitesNoVeg) (refinNoVeg[j,aceiteN]))) " | j in meses]

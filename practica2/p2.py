@@ -18,6 +18,7 @@ MCAP = input()#int(input())
 CA = input()#int(input())
 MinD = input()#int(input())
 MaxD = input()#int(input())
+# MaxD = str(10)
 MinB = input()#int(input())
 numMeses = 6
 numAceitesVeg = 2
@@ -41,9 +42,9 @@ for i in range(len(preciosNoVeg)):
         preciosNoVeg[i][j] = int(inp[cont])
         cont+=1
 inp = input().split()
-durezaVeg = [float(i) for i in inp]
+durezaVeg = [int(i) for i in inp]
 inp = input().split()
-durezaNoVeg = [float(i) for i in inp]
+durezaNoVeg = [int(i) for i in inp]
 inp = input().split()
 cantidadVeg = [int(inp[0]),int(inp[1])]
 inp = input().split()
@@ -134,6 +135,8 @@ def compVeg(i,j):
 def compNoVeg(i,j):
     return "compNoVeg_" + str(i) + "_" + str(j)
 
+def benef(i):
+    return "benef_" + str(i)
 
 
 def checksat():
@@ -160,9 +163,11 @@ for i in range(numMeses):
         print(intvar(refinNoVeg(i,j)))
         print(intvar(compNoVeg(i,j)))
         print(intvar(almacNoVeg(i,j)))
+    print(intvar(benef(i)))
 # fin declaración
 
 # ASSERTS
+
 # constraint assert ( VALOR > 0,"El valor del aceite tiene que ser positivo");
 print(addassert(addgt(VALOR,"0")))
 # constraint assert ( MAXV > 0,"El maximo de aceite vegetal refinado tiene que ser positivo");
@@ -179,6 +184,23 @@ for i in range(numAceitesVeg):
 for i in range(numAceitesNoVeg):
     print(addassert(addle(str(cantidadNoVeg[i]),MCAP)))
 # CONSTRAINTS
+
+# Constraints implicitas 
+# no podemos tener almacenamiento,compras o refin negativos
+# el valor maximo de compras tiene que ser como max MAX(V o N) + MCAP
+for i in range(numMeses):
+    for j in range(numAceitesVeg):
+        print(addassert(addge(almacVeg(i,j),"0")))
+        print(addassert(addge(compVeg(i,j),"0")))
+        print(addassert(addge(refinVeg(i,j),"0")))
+        print(addassert(addle(compVeg(i,j),str((int(MCAP)+int(MAXV))))))
+
+    for j in range(numAceitesNoVeg):
+        print(addassert(addge(almacNoVeg(i,j),"0")))
+        print(addassert(addge(compNoVeg(i,j),"0")))
+        print(addassert(addge(refinNoVeg(i,j),"0")))
+        print(addassert(addle(compNoVeg(i,j),str((int(MCAP)+int(MAXN))))))
+
 
 # constraint forall (mes in meses) ((sum (aceite in AceitesVeg) (refinVeg[mes,aceite]))<MAXV);
 for i in range(numMeses):
@@ -198,21 +220,32 @@ for i in range(numMeses):
 # function var int: refinMes(int:mes) = sum (aceite in AceitesVeg) (refinVeg[mes,aceite]) + sum (aceiteN in AceitesNoVeg) (refinNoVeg[mes,aceiteN]);
 for i in range(numMeses):
     sumaP = []
+    _sumaP = []
+    _refMes = []
     refMes = []
     for j in range(numAceitesVeg):
-        aux = "to_real("
-        refMes.append(refinVeg(i,j))
-        aux+= refinVeg(i,j)#str(durezaVeg[j])
-        aux+=") "
+        # aux = "(to_real("
+        # aux+= refinVeg(i,j)#str(durezaVeg[j])
+        # aux+=")) "
+        # str1 = "(to_real(" + str(durezaVeg[j]) +"))"
         # print(addmul(aux,str(durezaVeg[j])))
-        sumaP.append(addmul(aux,str(durezaVeg[j])))
+        # sumaP.append(addmul(aux,str1))
+        refMes.append(refinVeg(i,j))
+        _refMes.append(refinVeg(i,j))
+        sumaP.append(addmul(refinVeg(i,j),str(durezaVeg[j])))
+        _sumaP.append(addmul(refinVeg(i,j),str(durezaVeg[j])))
     for j in range(numAceitesNoVeg):
-        aux = "to_real("
-        aux += refinNoVeg(i,j)#str(durezaNoVeg[j])
-        aux+=") "
+        # aux = "(to_real("
+        # aux += refinNoVeg(i,j)#str(durezaNoVeg[j])
+        # aux+=")) "
+        # str1 = "(to_real(" + str(durezaNoVeg[j]) + "))"
+        # sumaP.append(addmul(aux,str1))
         refMes.append(refinNoVeg(i,j))
-        sumaP.append(addmul(aux,str(durezaNoVeg[j])))
-    print(addassert(addgt(addsum(sumaP) ,addmul(MinD,addsum(refMes)))))
+        _refMes.append(refinNoVeg(i,j))
+        sumaP.append(addmul(refinNoVeg(i,j),str(durezaNoVeg[j]))) 
+        _sumaP.append(addmul(refinNoVeg(i,j),str(durezaNoVeg[j])))
+    print(addassert(addand(addgt(addsum(sumaP) ,addmul(MinD,addsum(refMes))),addlt(addsum(_sumaP) ,addmul(MaxD,addsum(_refMes))))))
+    # print(addassert(addgt(addsum(sumaP) ,addmul(MinD,addsum(refMes)))))
 
 # constraint forall (aceite in AceitesVeg) (almacVeg[ENERO,aceite] = cantidadVeg[aceite]);
 for i in range(numAceitesVeg):
@@ -257,10 +290,17 @@ for i in range(numAceitesNoVeg):
 # constraint forall (mes in meses, aceite in AceitesVeg) (almacVeg[mes,aceite] <= MCAP);
 for i in range(numMeses):
     for j in range(numAceitesVeg):
+        # print(addassert(addge(almacVeg(i,j),"0")))
         print(addassert(addle(almacVeg(i,j),MCAP)))
+        # print(addassert(addle(addplus(almacVeg(i,j),compVeg(i,j)),MCAP)))
     for j in range(numAceitesNoVeg):
+        # print(addassert(addge(almacNoVeg(i,j),"0")))
         print(addassert(addle(almacNoVeg(i,j),MCAP)))
+        # print(addassert(addle(addplus(almacNoVeg(i,j),compNoVeg(i,j)),MCAP)))
+
+
 # constraint benef()>MinB;
+
 # function var int:benef()= sum (mes in meses) ((sum (aceite in AceitesVeg) (refinVeg[mes,aceite]*VALOR))+(sum (aceite in AceitesNoVeg) (refinNoVeg[mes,aceite]*VALOR)) -(gastos(mes)));
 # function var int:gastos(int:mes) = gastosCompras(mes) + gastosAlmacenamiento(mes);
 # function var int:gastosCompras(int:mes)= (sum (aceite in AceitesVeg) (compVeg[mes,aceite]*preciosVeg[mes,aceite]) + sum (aceite in AceitesNoVeg) (compNoVeg[mes,aceite]*preciosNoVeg[mes,aceite]));
@@ -268,15 +308,42 @@ for i in range(numMeses):
 for i in range(numMeses):
     gastosC = []
     gastosA = []
-    benef = []
+    _benef = []
     for j in range(numAceitesVeg):
-        benef.append(refinVeg(i,j))
+        _benef.append(refinVeg(i,j))
         gastosC.append(compVeg(i,j))
         gastosA.append(almacVeg(i,j))
     for j in range(numAceitesNoVeg):
-        benef.append(refinNoVeg(i,j))
+        _benef.append(refinNoVeg(i,j))
         gastosC.append(compNoVeg(i,j))
         gastosA.append(almacNoVeg(i,j))
-print("(maximize " + addmul(addsum(benef),VALOR) + ")" )
-print("(minimize " + addplus(addmul(addsum(gastosA),CA),addsum(gastosC)) + ")")# "- (" + addsum(gastosC)+ " + " + addmul(addsum(gastosA),CA) +" ))")
+    print(addassert(addeq(benef(i),(addresta((addmul(addsum(_benef),VALOR)), (addplus(addmul(addsum(gastosA),CA),addsum(gastosC))))))))
+
+b = []
+for i in range(numMeses):
+    b.append(benef(i))
+# print(addassert(addgt(addresta((addmul(addsum(benef),VALOR)), (addplus(addmul(addsum(gastosA),CA),addsum(gastosC))) ),MinB)))
+print("(maximize " + addsum(b) + " )")
+# print("(maximize " + addmul(addsum(benef),VALOR) + ")" )
+# print("(minimize " + addplus(addmul(addsum(gastosA),CA),addsum(gastosC)) + ")")# "- (" + addsum(gastosC)+ " + " + addmul(addsum(gastosA),CA) +" ))")
 print("(check-sat)")
+print("(get-objectives)")
+
+for i in range(numMeses):
+    for j in range(numAceitesVeg):
+        getvalue("("+ almacVeg(i,j)+")")
+    for j in range(numAceitesNoVeg):
+        getvalue("("+ almacNoVeg(i,j)+")")
+for i in range(numMeses):
+    for j in range(numAceitesVeg):
+        getvalue("("+ compVeg(i,j)+")")
+    for j in range(numAceitesNoVeg):
+        getvalue("("+ compNoVeg(i,j)+")")
+for i in range(numMeses):    
+    for j in range(numAceitesVeg):
+        getvalue("("+ refinVeg(i,j)+")")
+    for j in range(numAceitesNoVeg):
+        getvalue("("+ refinNoVeg(i,j)+")")
+
+for i in range(numMeses):
+    getvalue("(" + benef(i) + ")")
