@@ -325,13 +325,14 @@ K = input()
 T = input()
 
 # constraint forall (i in meses) ((sum(aceite in AceitesVeg) (bool2int(refinVeg[i,aceite]>0)) + sum(aceite in AceitesNoVeg) (bool2int(refinNoVeg[i,aceite]>0)))<=K);
+# restriccion soft
 for i in range(numMeses):
     count = []
     for j in range(numAceitesVeg):
         count.append(bool2int((addnot(addeq(refinVeg(i,j),"0")))))
     for j in range(numAceitesNoVeg):
         count.append(bool2int((addnot(addeq(refinNoVeg(i,j),"0")))))
-    print(addassert(addlt(addsum(count),K)))
+    print(addassertPeso(addlt(addsum(count),K),str(.2)))
 
 
 # constraint forall (i in meses) ((forall (j in AceitesVeg) (refinVeg[i,j] = 0 \/ refinVeg[i,j] > T)) /\ (forall (k in AceitesNoVeg) (refinNoVeg[i,k]=0\/refinNoVeg[i,k]>T)));
@@ -353,22 +354,22 @@ print("(check-sat)")
 print("(get-objectives)")
 
 
-# OUTPUT
-for i in range(numMeses):
-    for j in range(numAceitesVeg):
-        getvalue("("+ almacVeg(i,j)+")")
-    for j in range(numAceitesNoVeg):
-        getvalue("("+ almacNoVeg(i,j)+")")
-for i in range(numMeses):
-    for j in range(numAceitesVeg):
-        getvalue("("+ compVeg(i,j)+")")
-    for j in range(numAceitesNoVeg):
-        getvalue("("+ compNoVeg(i,j)+")")
-for i in range(numMeses):    
-    for j in range(numAceitesVeg):
-        getvalue("("+ refinVeg(i,j)+")")
-    for j in range(numAceitesNoVeg):
-        getvalue("("+ refinNoVeg(i,j)+")")
+# # OUTPUT
+# for i in range(numMeses):
+#     for j in range(numAceitesVeg):
+#         getvalue("("+ almacVeg(i,j)+")")
+#     for j in range(numAceitesNoVeg):
+#         getvalue("("+ almacNoVeg(i,j)+")")
+# for i in range(numMeses):
+#     for j in range(numAceitesVeg):
+#         getvalue("("+ compVeg(i,j)+")")
+#     for j in range(numAceitesNoVeg):
+#         getvalue("("+ compNoVeg(i,j)+")")
+# for i in range(numMeses):    
+#     for j in range(numAceitesVeg):
+#         getvalue("("+ refinVeg(i,j)+")")
+#     for j in range(numAceitesNoVeg):
+#         getvalue("("+ refinNoVeg(i,j)+")")
 
-for i in range(numMeses):
-    getvalue("(" + benef(i) + ")")
+# for i in range(numMeses):
+#     getvalue("(" + benef(i) + ")")
