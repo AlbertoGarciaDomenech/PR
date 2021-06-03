@@ -1,3 +1,5 @@
+# Practica 2 asignatura PR: Alberto García Doménech & David Godoy Ruiz
+
 #!/usr/bin/python3
 
 import sys
@@ -108,7 +110,7 @@ def addassert(a):
 
 # peso por defecto:1 condiciones no fuertes <1
 def addassertPeso(a,w):
-    return "(assert " +a+" :weight " +w+ ")"
+    return "(assert-soft " +a+" :weight " +w+ ")"
 
 def addsum(a):
     if len(a) == 0:
@@ -215,37 +217,36 @@ for i in range(numMeses):
         suma.append(refinNoVeg(i,j))
     print(addassert(addlt(addsum(suma),MAXN)))
 
+# constraint forall (i in meses) (forall (aceite in AceitesVeg) (almacVeg[i,aceite] + compVeg[i,aceite] >= refinVeg[i,aceite]));
+# constraint forall (i in meses) (forall (aceite in AceitesNoVeg) (almacNoVeg[i,aceite] + compNoVeg[i,aceite] >= refinNoVeg[i,aceite]));
+for i in range(numMeses):
+    for j in range(numAceitesVeg):
+        print(addassert(addge(addplus(almacVeg(i,j),compVeg(i,j)),refinVeg(i,j))))
+
+    for j in range(numAceitesNoVeg):
+        print(addassert(addge(addplus(almacNoVeg(i,j),compNoVeg(i,j)),refinNoVeg(i,j))))
+
 # constraint forall (mes in meses) (sumaPonderada(mes)>MinD*refinMes(mes));
 # function var float:sumaPonderada(int:mes) = sum (veg in AceitesVeg) (refinVeg[mes,veg] * durezaVeg[veg]) + sum (noveg in AceitesNoVeg) (refinNoVeg[mes,noveg] * durezaNoVeg[noveg]); 
 # function var int: refinMes(int:mes) = sum (aceite in AceitesVeg) (refinVeg[mes,aceite]) + sum (aceiteN in AceitesNoVeg) (refinNoVeg[mes,aceiteN]);
 for i in range(numMeses):
-    sumaP = []
-    _sumaP = []
-    _refMes = []
-    refMes = []
+    sumaP_mind = []
+    sumaP_maxd = []
+    refMes_mind = []
+    refMes_maxd = []
     for j in range(numAceitesVeg):
-        # aux = "(to_real("
-        # aux+= refinVeg(i,j)#str(durezaVeg[j])
-        # aux+=")) "
-        # str1 = "(to_real(" + str(durezaVeg[j]) +"))"
-        # print(addmul(aux,str(durezaVeg[j])))
-        # sumaP.append(addmul(aux,str1))
-        refMes.append(refinVeg(i,j))
-        _refMes.append(refinVeg(i,j))
-        sumaP.append(addmul(refinVeg(i,j),str(durezaVeg[j])))
-        _sumaP.append(addmul(refinVeg(i,j),str(durezaVeg[j])))
+        refMes_mind.append(refinVeg(i,j))
+        refMes_maxd.append(refinVeg(i,j))
+        sumaP_mind.append(addmul(refinVeg(i,j),str(durezaVeg[j])))
+        sumaP_maxd.append(addmul(refinVeg(i,j),str(durezaVeg[j])))
     for j in range(numAceitesNoVeg):
-        # aux = "(to_real("
-        # aux += refinNoVeg(i,j)#str(durezaNoVeg[j])
-        # aux+=")) "
-        # str1 = "(to_real(" + str(durezaNoVeg[j]) + "))"
-        # sumaP.append(addmul(aux,str1))
-        refMes.append(refinNoVeg(i,j))
-        _refMes.append(refinNoVeg(i,j))
-        sumaP.append(addmul(refinNoVeg(i,j),str(durezaNoVeg[j]))) 
-        _sumaP.append(addmul(refinNoVeg(i,j),str(durezaNoVeg[j])))
-    print(addassert(addand(addgt(addsum(sumaP) ,addmul(MinD,addsum(refMes))),addlt(addsum(_sumaP) ,addmul(MaxD,addsum(_refMes))))))
-    # print(addassert(addgt(addsum(sumaP) ,addmul(MinD,addsum(refMes)))))
+
+        refMes_mind.append(refinNoVeg(i,j))
+        refMes_maxd.append(refinNoVeg(i,j))
+        sumaP_mind.append(addmul(refinNoVeg(i,j),str(durezaNoVeg[j]))) 
+        sumaP_mind.append(addmul(refinNoVeg(i,j),str(durezaNoVeg[j])))
+    print(addassert(addand(addgt(addsum(sumaP_mind) ,addmul(MinD,addsum(refMes_mind))),addlt(addsum(sumaP_maxd) ,addmul(MaxD,addsum(refMes_maxd))))))
+
 
 # constraint forall (aceite in AceitesVeg) (almacVeg[ENERO,aceite] = cantidadVeg[aceite]);
 for i in range(numAceitesVeg):
@@ -290,13 +291,9 @@ for i in range(numAceitesNoVeg):
 # constraint forall (mes in meses, aceite in AceitesVeg) (almacVeg[mes,aceite] <= MCAP);
 for i in range(numMeses):
     for j in range(numAceitesVeg):
-        # print(addassert(addge(almacVeg(i,j),"0")))
         print(addassert(addle(almacVeg(i,j),MCAP)))
-        # print(addassert(addle(addplus(almacVeg(i,j),compVeg(i,j)),MCAP)))
     for j in range(numAceitesNoVeg):
-        # print(addassert(addge(almacNoVeg(i,j),"0")))
         print(addassert(addle(almacNoVeg(i,j),MCAP)))
-        # print(addassert(addle(addplus(almacNoVeg(i,j),compNoVeg(i,j)),MCAP)))
 
 
 # constraint benef()>MinB;
@@ -322,13 +319,41 @@ for i in range(numMeses):
 b = []
 for i in range(numMeses):
     b.append(benef(i))
-# print(addassert(addgt(addresta((addmul(addsum(benef),VALOR)), (addplus(addmul(addsum(gastosA),CA),addsum(gastosC))) ),MinB)))
+print(addassert(addge(addsum(b),MinB)))
+# EXTENSIONES
+K = input()
+T = input()
+
+# constraint forall (i in meses) ((sum(aceite in AceitesVeg) (bool2int(refinVeg[i,aceite]>0)) + sum(aceite in AceitesNoVeg) (bool2int(refinNoVeg[i,aceite]>0)))<=K);
+for i in range(numMeses):
+    count = []
+    for j in range(numAceitesVeg):
+        count.append(bool2int((addnot(addeq(refinVeg(i,j),"0")))))
+    for j in range(numAceitesNoVeg):
+        count.append(bool2int((addnot(addeq(refinNoVeg(i,j),"0")))))
+    print(addassert(addlt(addsum(count),K)))
+
+
+# constraint forall (i in meses) ((forall (j in AceitesVeg) (refinVeg[i,j] = 0 \/ refinVeg[i,j] > T)) /\ (forall (k in AceitesNoVeg) (refinNoVeg[i,k]=0\/refinNoVeg[i,k]>T)));
+for i in range(numMeses):
+    for j in range(numAceitesVeg):
+        print(addassert(addor(addeq(refinVeg(i,j),"0"),addgt(refinVeg(i,j),T))))
+    for j in range(numAceitesNoVeg):
+        print(addassert(addor(addeq(refinNoVeg(i,j),"0"),addgt(refinNoVeg(i,j),T))))
+
+# constraint forall(i in meses) ((refinVeg[i,VEG1]>0 \/ refinVeg[i,VEG1]>0)->refinNoVeg[i,ANV3]>0);
+for i in range(numMeses):
+    print(addassert(addimplication(addor(addgt(refinVeg(i,0),"0"),addgt(refinVeg(i,1),"0")),addgt(refinNoVeg(i,2),"0"))))
+b = []
+for i in range(numMeses):
+    b.append(benef(i))
+# objetivo de maximizacion
 print("(maximize " + addsum(b) + " )")
-# print("(maximize " + addmul(addsum(benef),VALOR) + ")" )
-# print("(minimize " + addplus(addmul(addsum(gastosA),CA),addsum(gastosC)) + ")")# "- (" + addsum(gastosC)+ " + " + addmul(addsum(gastosA),CA) +" ))")
 print("(check-sat)")
 print("(get-objectives)")
 
+
+# OUTPUT
 for i in range(numMeses):
     for j in range(numAceitesVeg):
         getvalue("("+ almacVeg(i,j)+")")
